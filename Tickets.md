@@ -7,11 +7,11 @@ This document outlines the phased delivery plan for the C# Sudoku console applic
 ## MVP
 
 ### CORE-01: Fulfil functional requirements
-* **Category:** `Feature` / `Unit tests`
+* **Category:** `Feature` / `Unit Tests`
 * **Status:** Priority 1
 * **Description:** Deliver the complete set of core features required to make the Sudoku application fully playable, robust, and visually polished according to the specification.
 * **Acceptance Criteria / Implementation Breakdown:**
-  1. **Setup:** Basic board with hardcoded static layout, user inputs (`[Cell] [Number]`, `clear`, `quit`), and command logs[cite: 2, 3].
+  1. **Setup:** Basic board with hardcoded static layout, user inputs (`[Cell] [Number]`, `[Cell] clear`, `hint`, `check`, `quit`), and command logs[cite: 2, 3].
   2. **Validation:** Comprehensive rule checking for duplicates in rows, columns, and 3x3 subgrids, plus blocking invalid moves (pre-filled cells, out-of-range values)[cite: 2, 3].
   3. **Logs & Feedback:** Status logging, history tracking, and clean messaging for errors and accepted moves[cite: 2, 3].
   4. **Display & UI:** Proper terminal borders, clean spacing, font colors, and highlighted cell rendering[cite: 1, 3].

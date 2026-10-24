@@ -1,0 +1,95 @@
+trigger:
+  branches:
+	include:
+	  - main
+  tags:
+	include:
+	  - 'v*'
+
+pr:
+  branches:
+	include:
+	  - main
+
+variables:
+  buildConfiguration: Release
+  dotNetVersion: '10.0.x'
+
+stages:
+- stage: Build
+  displayName: Build and test
+  jobs:
+  - job: BuildJob
+	pool:
+	  vmImage: ubuntu-latest
+	steps:
+	- task: UseDotNet@2
+	  displayName: Install .NET SDK
+	  inputs:
+		packageType: sdk
+		version: $(dotNetVersion)
+
+	- script: dotnet restore Sudoku.slnx
+	  displayName: Restore dependencies
+
+	- script: dotnet build Sudoku.slnx --configuration $(buildConfiguration) --no-restore
+	  displayName: Build solution
+
+	- script: dotnet test Sudoku.slnx --configuration $(buildConfiguration) --no-build --logger "trx;LogFileName=test-results.trx"
+	  displayName: Run tests
+
+	- task: PublishTestResults@2
+	  displayName: Publish test results
+	  condition: always()
+	  inputs:
+		testResultsFormat: VSTest
+		testResultsFiles: '**/*.trx'
+		failTaskOnFailedTests: true
+
+- stage: Staging
+  displayName: Staging publish
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - job: PublishStaging
+	pool:
+	  vmImage: ubuntu-latest
+	steps:
+	- task: UseDotNet@2
+	  displayName: Install .NET SDK
+	  inputs:
+		packageType: sdk
+		version: $(dotNetVersion)
+
+	- script: dotnet publish Sudoku/Sudoku.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/staging
+	  displayName: Publish staging artifact
+
+	- task: PublishPipelineArtifact@1
+	  displayName: Publish staging artifact to pipeline
+	  inputs:
+		targetPath: '$(Build.ArtifactStagingDirectory)/staging'
+		artifact: sudoku-staging
+
+- stage: Production
+  displayName: Production publish
+  dependsOn: Build
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
+  jobs:
+  - job: PublishProduction
+	pool:
+	  vmImage: ubuntu-latest
+	steps:
+	- task: UseDotNet@2
+	  displayName: Install .NET SDK
+	  inputs:
+		packageType: sdk
+		version: $(dotNetVersion)
+
+	- script: dotnet publish Sudoku/Sudoku.csproj --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/production
+	  displayName: Publish production artifact
+
+	- task: PublishPipelineArtifact@1
+	  displayName: Publish production artifact to pipeline
+	  inputs:
+		targetPath: '$(Build.ArtifactStagingDirectory)/production'
+		artifact: sudoku-production

@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Sudoku
 {
+    /// <summary>
+    /// Represents the in-memory state of a Sudoku game board.
+    /// </summary>
     public class SudokuBoard
     {
         private int[,] board = new int[9, 9];
@@ -16,6 +19,9 @@ namespace Sudoku
         private readonly HashSet<(int row, int col)> hintedCells = new HashSet<(int row, int col)>();
         private readonly List<(int row, int col, int value)> userEntries = new List<(int row, int col, int value)>();
 
+        /// <summary>
+        /// Initializes a new random Sudoku board with a valid puzzle state.
+        /// </summary>
         public SudokuBoard()
         {
             GenerateRandomPuzzle();
@@ -77,6 +83,9 @@ namespace Sudoku
             }
         }
 
+        /// <summary>
+        /// Renders the current board to the console.
+        /// </summary>
         public void Print()
         {
             var invalidCells = GetInvalidCells();
@@ -138,11 +147,21 @@ namespace Sudoku
             }
         }
 
+        /// <summary>
+        /// Clears the active highlighted hint cell.
+        /// </summary>
         public void ClearHighlight()
         {
             highlightedCell = null;
         }
 
+        /// <summary>
+        /// Attempts to place a value in the grid when the position is editable.
+        /// </summary>
+        /// <param name="row">The zero-based row index.</param>
+        /// <param name="col">The zero-based column index.</param>
+        /// <param name="num">The number to place.</param>
+        /// <returns>True when the move is accepted; otherwise, false.</returns>
         public bool TryMakeMove(int row, int col, int num)
         {
             if (row < 0 || row >= 9 || col < 0 || col >= 9)
@@ -163,6 +182,12 @@ namespace Sudoku
             return true;
         }
 
+        /// <summary>
+        /// Clears a non-clue cell.
+        /// </summary>
+        /// <param name="row">The zero-based row index.</param>
+        /// <param name="col">The zero-based column index.</param>
+        /// <returns>True when the cell was cleared; otherwise, false.</returns>
         public bool TryClear(int row, int col)
         {
             if (initialClues[row, col]) return false;
@@ -175,6 +200,10 @@ namespace Sudoku
             return true;
         }
 
+        /// <summary>
+        /// Determines whether every cell has been filled.
+        /// </summary>
+        /// <returns>True when the board is completely filled; otherwise, false.</returns>
         public bool IsBoardComplete()
         {
             for (int r = 0; r < 9; r++)
@@ -191,11 +220,19 @@ namespace Sudoku
             return true;
         }
 
+        /// <summary>
+        /// Determines whether the board violates Sudoku row, column, or subgrid rules.
+        /// </summary>
+        /// <returns>True when a rule violation exists; otherwise, false.</returns>
         public bool HasRuleViolation()
         {
             return GetFirstViolationMessage() != null;
         }
 
+        /// <summary>
+        /// Validates the current grid and returns the first violation message or a completion message.
+        /// </summary>
+        /// <returns>A rule violation message or success status.</returns>
         public string CheckBoard()
         {
             string? violation = GetFirstViolationMessage();
@@ -263,6 +300,10 @@ namespace Sudoku
             return null;
         }
 
+        /// <summary>
+        /// Gets the set of coordinates that violate Sudoku rules.
+        /// </summary>
+        /// <returns>A set of invalid cell positions.</returns>
         public HashSet<(int row, int col)> GetInvalidCells()
         {
             var invalid = new HashSet<(int row, int col)>();
@@ -342,6 +383,10 @@ namespace Sudoku
             return invalid;
         }
 
+        /// <summary>
+        /// Provides a non-destructive hint based on incorrect user entries or empty cells.
+        /// </summary>
+        /// <returns>A descriptive hint message.</returns>
         public string GiveHint()
         {
             var wrongUserEntries = new List<(int row, int col)>();
