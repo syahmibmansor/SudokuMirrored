@@ -13,6 +13,7 @@ namespace Sudoku
         private int[,] masterSolution = new int[9, 9];
         private (int row, int col)? highlightedCell;
         private (int row, int col)? lastHintedCell;
+        private readonly HashSet<(int row, int col)> hintedCells = new HashSet<(int row, int col)>();
         private readonly List<(int row, int col, int value)> userEntries = new List<(int row, int col, int value)>();
 
         public SudokuBoard()
@@ -156,6 +157,7 @@ namespace Sudoku
             board[row, col] = num;
             highlightedCell = null;
             lastHintedCell = null;
+            hintedCells.Clear();
             userEntries.RemoveAll(entry => entry.row == row && entry.col == col);
             userEntries.Add((row, col, num));
             return true;
@@ -168,7 +170,24 @@ namespace Sudoku
             board[row, col] = 0;
             highlightedCell = null;
             lastHintedCell = null;
+            hintedCells.Clear();
             userEntries.RemoveAll(entry => entry.row == row && entry.col == col);
+            return true;
+        }
+
+        public bool IsBoardComplete()
+        {
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    if (board[r, c] == 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
             return true;
         }
 
@@ -349,56 +368,45 @@ namespace Sudoku
                 }
             }
 
-            var candidateWrongEntries = wrongUserEntries
-                .Where(cell => !lastHintedCell.HasValue || cell != lastHintedCell.Value)
+            var unhintedWrongEntries = wrongUserEntries
+                .Where(cell => !hintedCells.Contains(cell))
                 .ToList();
 
-            if (candidateWrongEntries.Count > 0)
+            if (unhintedWrongEntries.Count > 0)
             {
-                var target = candidateWrongEntries[rand.Next(candidateWrongEntries.Count)];
-                lastHintedCell = target;
+                var target = unhintedWrongEntries[rand.Next(unhintedWrongEntries.Count)];
+                hintedCells.Add(target);
                 highlightedCell = target;
+                lastHintedCell = target;
                 int correctValue = masterSolution[target.row, target.col];
                 char rowLabel = (char)('A' + target.row);
                 return $"Hint: Cell {rowLabel}{target.col + 1} should be {correctValue}. The current value is incorrect.";
             }
 
-            var candidateEmptyCells = emptyCells
-                .Where(cell => !lastHintedCell.HasValue || cell != lastHintedCell.Value)
+            var unhintedEmptyCells = emptyCells
+                .Where(cell => !hintedCells.Contains(cell))
                 .ToList();
 
-            if (candidateEmptyCells.Count > 0)
+            if (unhintedEmptyCells.Count > 0)
             {
-                var target = candidateEmptyCells[rand.Next(candidateEmptyCells.Count)];
-                lastHintedCell = target;
+                var target = unhintedEmptyCells[rand.Next(unhintedEmptyCells.Count)];
+                hintedCells.Add(target);
                 highlightedCell = target;
+                lastHintedCell = target;
                 int correctValue = masterSolution[target.row, target.col];
                 char rowLabel = (char)('A' + target.row);
                 return $"Hint: Cell {rowLabel}{target.col + 1} should be {correctValue}.";
             }
 
-            if (wrongUserEntries.Count > 0)
+            if (wrongUserEntries.Count > 0 || emptyCells.Count > 0)
             {
-                var target = wrongUserEntries[rand.Next(wrongUserEntries.Count)];
-                lastHintedCell = target;
-                highlightedCell = target;
-                int correctValue = masterSolution[target.row, target.col];
-                char rowLabel = (char)('A' + target.row);
-                return $"Hint: Cell {rowLabel}{target.col + 1} should be {correctValue}. The current value is incorrect.";
-            }
-
-            if (emptyCells.Count > 0)
-            {
-                var target = emptyCells[rand.Next(emptyCells.Count)];
-                lastHintedCell = target;
-                highlightedCell = target;
-                int correctValue = masterSolution[target.row, target.col];
-                char rowLabel = (char)('A' + target.row);
-                return $"Hint: Cell {rowLabel}{target.col + 1} should be {correctValue}.";
+                hintedCells.Clear();
+                return GiveHint();
             }
 
             highlightedCell = null;
             lastHintedCell = null;
+            hintedCells.Clear();
             return "Hint: No empty or incorrect cells remain.";
         }
 

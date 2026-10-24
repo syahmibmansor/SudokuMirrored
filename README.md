@@ -46,7 +46,12 @@ This solution contains a simple console-based Sudoku game built with C# and .NET
 - The program marks original clues distinctly from user-entered values.
 - User-entered cells cannot overwrite pre-filled clue values.
 - Invalid moves are rejected, and the game can provide a hint to fill the next empty or incorrect cell.
-- Hint behavior: the game compares the current board to the master solution and logs the correct value for the selected cell without changing the board. If the user has entered a wrong value, the hint reveals the correct value for that cell instead of silently overwriting it.
+- Hint behavior: 
+-- The game compares the current board to the master solution and logs the correct value for the selected cell without changing the board.
+-- Hint will prioritize checking the user input first and show if reveal the correct value.
+-- If no user input is incorrect or if there is no user input, then the correct value will be revealed for a random empty cell instead.
+-- Rewards Accuracy: If a player is playing carefully and hasn't made any mistakes, they get rewarded with a helpful new hint to push them forward.
+-- Saves Players from Dead Ends: If they've quietly drifted onto a wrong path without breaking immediate rules, the hint catches the root cause of their future deadlock immediately.
 
 ## Environment
 

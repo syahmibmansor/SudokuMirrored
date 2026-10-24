@@ -210,6 +210,52 @@ public class SudokuBoardTests
     }
 
     [Fact]
+    public void GiveHint_MovesToEmptyCellAfterWrongEntriesAreAllHinted()
+    {
+        var solvedBoard = CreateSolvedBoard();
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+
+        board[0, 0] = 8;
+        board[0, 1] = 9;
+        clues[0, 0] = false;
+        clues[0, 1] = false;
+
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                if (r == 0 && (c == 0 || c == 1))
+                {
+                    continue;
+                }
+
+                if (r == 0 && c == 2)
+                {
+                    board[r, c] = 0;
+                    clues[r, c] = false;
+                }
+            }
+        }
+
+        var gameBoard = CreateBoardWithState(board, clues);
+        var masterSolutionField = typeof(SudokuBoard).GetField("masterSolution", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(masterSolutionField);
+        masterSolutionField.SetValue(gameBoard, solvedBoard);
+
+        var firstHint = gameBoard.GiveHint();
+        var secondHint = gameBoard.GiveHint();
+        var thirdHint = gameBoard.GiveHint();
+
+        Assert.Contains("should be", firstHint);
+        Assert.Contains("should be", secondHint);
+        Assert.Contains("should be", thirdHint);
+        Assert.DoesNotContain("A1", thirdHint);
+        Assert.DoesNotContain("A2", thirdHint);
+        Assert.Contains("Hint: Cell", thirdHint);
+    }
+
+    [Fact]
     public void CheckBoard_ReturnsSuccessWhenBoardIsFullyFilled()
     {
         int[,] solvedBoard = CreateSolvedBoard();

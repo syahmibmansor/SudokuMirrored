@@ -9,9 +9,32 @@ class Program
 
         List<string> historyLog = new List<string> { "Game loaded with 30 random clues. Good luck!" };
         string activeMessage = historyLog[0];
+        bool gameCompleted = false;
 
         while (true)
         {
+            if (gameCompleted)
+            {
+                if (!Console.IsOutputRedirected)
+                {
+                    Console.Clear();
+                }
+
+                Console.WriteLine("You have successfully completed the Sudoku puzzle!");
+                Console.WriteLine("Press any key to play again, or Q to quit...");
+                ConsoleKeyInfo key = Console.ReadKey(true);
+                if (char.ToLowerInvariant(key.KeyChar) == 'q')
+                {
+                    break;
+                }
+
+                gameBoard = new SudokuBoard();
+                historyLog = new List<string> { "Game loaded with 30 random clues. Good luck!" };
+                activeMessage = historyLog[0];
+                gameCompleted = false;
+                continue;
+            }
+
             if (!Console.IsOutputRedirected)
             {
                 Console.Clear();
@@ -107,6 +130,15 @@ class Program
                                 string msg = $"Move accepted. Placed {num} at {cellCoord}.";
                                 historyLog.Add(msg);
                                 activeMessage = msg;
+
+                                if (gameBoard.IsBoardComplete() && !gameBoard.HasRuleViolation())
+                                {
+                                    string completed = "You have successfully completed the Sudoku puzzle!";
+                                    historyLog.Add(completed);
+                                    activeMessage = completed;
+                                    gameCompleted = true;
+                                    continue;
+                                }
                             }
                             else
                             {

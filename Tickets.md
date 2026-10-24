@@ -1,81 +1,50 @@
-# Sudoku App - Development Backlog & Tickets
+# Sudoku App - Development Roadmap & Backlog
 
-This document outlines the incremental roadmap and ticket tracking for evolving the C# Sudoku console application from an MVP to a production-grade release.
-
----
-
-## Epic 1: Core Specification & Compliance (MVP Solidification)
-
-### CORE-01: Standardize Command Parsing & Input Validation
-* **Category:** `Refactor` / `Bugfix`
-* **Description:** Align command parsing with the exact specification in `Requirements.md`. Ensure robust handling of user inputs such as `A3 4`, `C5 clear`, `hint`, `check`, and `quit`.
-* **Acceptance Criteria:**
-  * Commands are case-insensitive or cleanly handled.
-  * Invalid cell formats (e.g., `Z9 4` or `A10 2`) display clean error messages without crashing.
-  * Pre-filled cells are protected from modification with the exact message: `Invalid move. [Cell] is pre-filled.`[cite: 2]
-
-### CORE-02: Comprehensive Board Validation & Rule Enforcement
-* **Category:** `Feature` / `Validation`
-* **Description:** Ensure the `check` command accurately diagnoses rule violations and pinpoints whether a duplicate exists in a row, column, or 3x3 subgrid.
-* **Acceptance Criteria:**
-  * Detects duplicate numbers in rows, columns, and 3x3 subgrids separately[cite: 2].
-  * Outputs descriptive messages matching the spec (e.g., `Number 3 already exists in Row A.`, `Number 5 already exists in Column 1.`, `Number 8 already exists in the same 3×3 subgrid.`)[cite: 2].
-  * Unit tests thoroughly verify all violation scenarios.
+This document outlines the phased delivery plan for the C# Sudoku console application, structured around your MVP implementation milestones and future post-MVP enhancements.
 
 ---
 
-## Epic 2: Advanced Gameplay Features
+## MVP
+
+### CORE-01: Fulfil functional requirements
+* **Category:** `Feature` / `Unit tests`
+* **Status:** Priority 1
+* **Description:** Deliver the complete set of core features required to make the Sudoku application fully playable, robust, and visually polished according to the specification.
+* **Acceptance Criteria / Implementation Breakdown:**
+  1. **Setup:** Basic board with hardcoded static layout, user inputs (`[Cell] [Number]`, `clear`, `quit`), and command logs[cite: 2, 3].
+  2. **Validation:** Comprehensive rule checking for duplicates in rows, columns, and 3x3 subgrids, plus blocking invalid moves (pre-filled cells, out-of-range values)[cite: 2, 3].
+  3. **Logs & Feedback:** Status logging, history tracking, and clean messaging for errors and accepted moves[cite: 2, 3].
+  4. **Display & UI:** Proper terminal borders, clean spacing, font colors, and highlighted cell rendering[cite: 1, 3].
+  5. **Puzzle Generation Enhancement:** Transition from static boards to dynamic generation ensuring exactly 30 pre-filled cells with randomized numbers and positions[cite: 2, 3].
+  6. **Enhanced Hint Function:** Backed by a pre-calculated master solution grid to catch hidden drift errors before revealing new moves[cite: 3].
+  7. **Smooth Gameplay Experience:** Graceful handling of game completion (`You have successfully completed...`) with prompts to start a new game[cite: 2, 3].
+
+### PROD-01: Production-ready with appropriate documentation
+* **Category:** `DevOps` / `Engineering Standards`
+* **Status:** Priority 1
+* **Description:** Establish production readiness through comprehensive documentation, consistent C# project properties, and a CI/CD pipeline template simulating staging and production deployments.
+* **Acceptance Criteria:**
+  * Comprehensive `README.md` with environment prerequisites, build instructions, design assumptions, and execution guidelines[cite: 2, 3].
+  * Base configuration files (e.g., `Directory.Build.props`) for uniform C# compiler settings[cite: 3].
+  * Foundational CI/CD YAML configuration (`azure-pipelines.yml` or GitHub Actions) demonstrating automated build, test, and release flows for staging and production targets[cite: 3].
+
+---
+
+## Post-MVP
+*Objective: Demonstrate technical scalability, advanced UX design thinking, and professional engineering capabilities beyond baseline requirements.*
 
 ### GAME-01: Implement Undo & Redo Stacks
-* **Category:** `Feature`
-* **Description:** Add support for state history using `System.Collections.Generic` (`Stack<T>`) so players can step backward and forward through their moves.
-* **Acceptance Criteria:**
-  * Add `undo` and `redo` command handlers to the CLI loop.
-  * Ensure pre-filled cells and immutable board states cannot be undone past the initial puzzle setup.
-  * Unit tests verify state rollback correctness.
+* **Category:** `Feature` (Post-MVP)
+* **Description:** Add support for state history using `System.Collections.Generic` (`Stack<T>`) so players can step backward and forward through their moves[cite: 3].
 
 ### GAME-02: Native Pencil Marks (Candidate System)
-* **Category:** `Feature`
-* **Description:** Allow users to toggle candidate/pencil-mark numbers inside empty cells without committing to a primary move.
-* **Acceptance Criteria:**
-  * Support syntax for toggling pencil marks (e.g., `A3+4` to add candidate 4).
-  * Render candidate marks cleanly in the console view without disrupting the primary grid layout.
-
----
-
-## Epic 3: Interactive UI & Persistence
+* **Category:** `Feature` (Post-MVP)
+* **Description:** Allow users to toggle candidate/pencil-mark numbers inside empty cells without committing to a primary move[cite: 3].
 
 ### UI-01: Interactive Arrow-Key Navigation (`System.Console`)
-* **Category:** `Enhancement`
-* **Description:** Upgrade the CLI from pure text-command entry to an interactive grid view where users can navigate cells using arrow keys.
-* **Acceptance Criteria:**
-  * Use raw `System.Console` key reads (`Console.KeyAvailable`, `ConsoleKey.LeftArrow`, etc.) to highlight the active cell.
-  * Allow direct number entry or clearing while navigating via arrow keys.
-  * Maintain fallback command text input for non-interactive automation or testing.
+* **Category:** `Enhancement` (Post-MVP)
+* **Description:** Upgrade the CLI from pure text-command entry to an interactive grid view where users can navigate cells using arrow keys[cite: 3].
 
 ### PERS-01: Native Save, Load, & Statistics (`System.Text.Json`)
-* **Category:** `Feature`
-* **Description:** Enable users to persist their active game session to disk and track game history using `System.Text.Json`.
-* **Acceptance Criteria:**
-  * Add `save [filename]` and `load [filename]` commands.
-  * Automatically track and persist player statistics (games played, wins, best times) to a local JSON file.
-  * Handle IO exceptions gracefully if files are missing or corrupted.
-
----
-
-## Epic 4: Robust Puzzle Generation & Production Engineering
-
-### PROD-01: Custom Backtracking / DLX Generator
-* **Category:** `Core Logic`
-* **Description:** Replace hardcoded or static boards with a dynamic puzzle generator that guarantees a unique solution and exactly 30 pre-filled numbers.
-* **Acceptance Criteria:**
-  * Generator implements a robust backtracking algorithm (or Dancing Links / DLX) to construct valid, solvable Sudoku grids.
-  * Guarantees that the initial puzzle state presents precisely 30 pre-filled cells denoted by `_`[cite: 2].
-
-### PROD-02: Production CI/CD Pipeline & Repository Hardening
-* **Category:** `DevOps`
-* **Description:** Finalize the project structure with professional engineering artifacts, automated testing pipelines, and code quality enforcers.
-* **Acceptance Criteria:**
-  * Add GitHub Actions (`.github/workflows/ci.yml`) or Azure DevOps (`azure-pipelines.yml`) pipeline to restore, build, and run unit tests automatically on every push/PR.
-  * Include a root `Directory.Build.props` and `.editorconfig` for consistent C# styling.
-  * Update `README.md` with comprehensive setup instructions, environment prerequisites, and gameplay guidelines[cite: 2].
+* **Category:** `Feature` (Post-MVP)
+* **Description:** Enable users to persist their active game session to disk and track game history using `System.Text.Json`[cite: 3].
