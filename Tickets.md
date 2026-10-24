@@ -37,7 +37,11 @@ This document outlines the phased delivery plan for the C# Sudoku console applic
 * **Category:** `Feature` (Post-MVP)
 * **Description:** Add support for state history using `System.Collections.Generic` (`Stack<T>`) so players can step backward and forward through their moves[cite: 3].
 
-### GAME-02: Native Pencil Marks (Candidate System)
+### GAME-02: Game Modes: 3 levels of Difficulty
+* **Category:** `Feature` (Post-MVP)
+* **Description:** Easy, normal and hard mode with 30 pre-filled cells but distributed differently.
+
+### GAME-03: Native Pencil Marks (Candidate System)
 * **Category:** `Feature` (Post-MVP)
 * **Description:** Allow users to toggle candidate/pencil-mark numbers inside empty cells without committing to a primary move[cite: 3].
 

@@ -61,11 +61,13 @@ class Program
             Console.WriteLine("===============================================");
             Console.Write("Enter command: ");
 
-            string? input = Console.ReadLine()?.Trim();
-            if (input?.ToLower() == "exit") break;
-            if (string.IsNullOrEmpty(input)) continue;
+            string? input = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(input)) continue;
 
-            if (input.ToLower() == "hint")
+            ParsedCommand command = CommandParser.Parse(input);
+            if (command.Kind == CommandKind.Exit) break;
+
+            if (command.Kind == CommandKind.Hint)
             {
                 if (gameBoard.HasRuleViolation())
                 {
@@ -81,7 +83,7 @@ class Program
                 continue;
             }
 
-            if (input.ToLower() == "check")
+            if (command.Kind == CommandKind.Check)
             {
                 string msg = gameBoard.CheckBoard();
                 historyLog.Add(msg);
@@ -89,78 +91,57 @@ class Program
                 continue;
             }
 
-            string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            if (parts.Length == 2 && parts[0].Length == 2)
+            if (command.Kind == CommandKind.Clear)
             {
-                string cellCoord = parts[0].ToUpper();
-                char rowChar = cellCoord[0];
-                char colChar = cellCoord[1];
-
-                if (char.IsLetter(rowChar) && char.IsDigit(colChar))
+                string cellCoord = $"{(char)('A' + command.Row)}{command.Column + 1}";
+                gameBoard.ClearHighlight();
+                bool cleared = gameBoard.TryClear(command.Row, command.Column);
+                if (cleared)
                 {
-                    int row = rowChar - 'A';
-                    int col = (colChar - '0') - 1;
+                    string msg = $"Move accepted. Cleared {cellCoord}.";
+                    historyLog.Add(msg);
+                    activeMessage = msg;
+                }
+                else
+                {
+                    string msg = $"Invalid move. {cellCoord} is pre-filled.";
+                    historyLog.Add(msg);
+                    activeMessage = msg;
+                }
+                continue;
+            }
 
-                    if (row >= 0 && row < 9 && col >= 0 && col < 9)
+            if (command.Kind == CommandKind.Move)
+            {
+                string cellCoord = $"{(char)('A' + command.Row)}{command.Column + 1}";
+                gameBoard.ClearHighlight();
+                bool success = gameBoard.TryMakeMove(command.Row, command.Column, command.Value);
+                if (success)
+                {
+                    string msg = $"Move accepted. Placed {command.Value} at {cellCoord}.";
+                    historyLog.Add(msg);
+                    activeMessage = msg;
+
+                    if (gameBoard.IsBoardComplete() && !gameBoard.HasRuleViolation())
                     {
-                        gameBoard.ClearHighlight();
-
-                        if (parts[1].ToLower() == "clear")
-                        {
-                            bool cleared = gameBoard.TryClear(row, col);
-                            if (cleared)
-                            {
-                                string msg = $"Move accepted. Cleared {cellCoord}.";
-                                historyLog.Add(msg);
-                                activeMessage = msg;
-                            }
-                            else
-                            {
-                                string msg = $"Invalid move. {cellCoord} is pre-filled.";
-                                historyLog.Add(msg);
-                                activeMessage = msg;
-                            }
-                        }
-                        else if (int.TryParse(parts[1], out int num) && num >= 1 && num <= 9)
-                        {
-                            bool success = gameBoard.TryMakeMove(row, col, num);
-                            if (success)
-                            {
-                                string msg = $"Move accepted. Placed {num} at {cellCoord}.";
-                                historyLog.Add(msg);
-                                activeMessage = msg;
-
-                                if (gameBoard.IsBoardComplete() && !gameBoard.HasRuleViolation())
-                                {
-                                    string completed = "You have successfully completed the Sudoku puzzle!";
-                                    historyLog.Add(completed);
-                                    activeMessage = completed;
-                                    gameCompleted = true;
-                                    continue;
-                                }
-                            }
-                            else
-                            {
-                                string msg = $"Invalid move. {cellCoord} is pre-filled.";
-                                historyLog.Add(msg);
-                                activeMessage = msg;
-                            }
-                        }
-                        else
-                        {
-                            string msg = "Error: Invalid number. Use 1-9 or 'clear'.";
-                            historyLog.Add(msg);
-                            activeMessage = msg;
-                        }
+                        string completed = "You have successfully completed the Sudoku puzzle!";
+                        historyLog.Add(completed);
+                        activeMessage = completed;
+                        gameCompleted = true;
                         continue;
                     }
                 }
+                else
+                {
+                    string msg = $"Invalid move. {cellCoord} is pre-filled.";
+                    historyLog.Add(msg);
+                    activeMessage = msg;
+                }
+                continue;
             }
 
-            string invalidMsg = "Error: Invalid format. Use 'A3 4' or 'C5 clear'.";
-            historyLog.Add(invalidMsg);
-            activeMessage = invalidMsg;
+            historyLog.Add(command.ErrorMessage);
+            activeMessage = command.ErrorMessage;
         }
     }
 }

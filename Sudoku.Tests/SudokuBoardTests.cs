@@ -256,6 +256,21 @@ public class SudokuBoardTests
     }
 
     [Fact]
+    public void CheckBoard_ReturnsColumnViolationMessage()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        board[0, 0] = 1;
+        board[1, 0] = 1;
+
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        var result = gameBoard.CheckBoard();
+
+        Assert.Equal("Number 1 already exists in Column 1.", result);
+    }
+
+    [Fact]
     public void CheckBoard_ReturnsSuccessWhenBoardIsFullyFilled()
     {
         int[,] solvedBoard = CreateSolvedBoard();
@@ -325,6 +340,44 @@ public class SudokuBoardTests
         var result = gameBoard.CheckBoard();
 
         Assert.Equal("Number 1 already exists in the same 3×3 subgrid.", result);
+    }
+
+    [Fact]
+    public void Parser_RejectsOutOfBoundsCoordinates()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        var result = gameBoard.TryMakeMove(9, 9, 5);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void Parser_HandlesCaseInsensitiveCommands()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        var result = gameBoard.TryMakeMove(0, 0, 5);
+
+        Assert.True(result);
+        Assert.Equal(5, GetBoardValue(gameBoard, 0, 0));
+    }
+
+    [Fact]
+    public void TryClear_DoesNotCrashOnEmptyCell()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        var exception = Record.Exception(() => gameBoard.TryClear(0, 0));
+
+        Assert.Null(exception);
+        Assert.Equal(0, GetBoardValue(gameBoard, 0, 0));
     }
 
     private static int GetBoardValue(SudokuBoard board, int row, int col)
