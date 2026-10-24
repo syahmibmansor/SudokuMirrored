@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Sudoku
@@ -9,6 +10,10 @@ namespace Sudoku
         private int[,] board = new int[9, 9];
         private readonly bool[,] initialClues = new bool[9, 9];
         private readonly Random rand = new Random();
+        private int[,] masterSolution = new int[9, 9];
+        private (int row, int col)? highlightedCell;
+        private (int row, int col)? lastHintedCell;
+        private readonly List<(int row, int col, int value)> userEntries = new List<(int row, int col, int value)>();
 
         public SudokuBoard()
         {
@@ -18,82 +23,142 @@ namespace Sudoku
         private void GenerateRandomPuzzle()
         {
             board = new int[9, 9];
-            SolveSudoku(board);
+            masterSolution = new int[9, 9];
 
-            int cellsToRemove = 51; // Leave 30 pre-filled clues
-            while (cellsToRemove > 0)
+            if (!GenerateSolvedBoard(board))
             {
-                int r = rand.Next(0, 9);
-                int c = rand.Next(0, 9);
+                throw new InvalidOperationException("Unable to generate a valid Sudoku solution.");
+            }
 
-                if (board[r, c] != 0)
+            masterSolution = (int[,])board.Clone();
+
+            int cellsToRemove = 51; // Leave 30 pre-filled clues.
+            var positions = new List<(int row, int col)>();
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
                 {
-                    board[r, c] = 0;
-                    cellsToRemove--;
+                    positions.Add((r, c));
                 }
+            }
+
+            for (int i = positions.Count - 1; i > 0; i--)
+            {
+                int j = rand.Next(i + 1);
+                var temp = positions[i];
+                positions[i] = positions[j];
+                positions[j] = temp;
+            }
+
+            foreach (var (row, col) in positions)
+            {
+                if (cellsToRemove == 0)
+                    break;
+
+                int original = board[row, col];
+                board[row, col] = 0;
+
+                if (CountSolutions(board) != 1)
+                {
+                    board[row, col] = original;
+                    continue;
+                }
+
+                cellsToRemove--;
             }
 
             for (int r = 0; r < 9; r++)
             {
                 for (int c = 0; c < 9; c++)
                 {
-                    if (board[r, c] != 0)
-                    {
-                        initialClues[r, c] = true;
-                    }
-                    else
-                    {
-                        initialClues[r, c] = false;
-                    }
+                    initialClues[r, c] = board[r, c] != 0;
                 }
             }
         }
 
         public void Print()
         {
-            Console.WriteLine("    1 2 3   4 5 6   7 8 9 ");
+            var invalidCells = GetInvalidCells();
+
+            Console.WriteLine("    1 2 3   4 5 6   7 8 9");
             Console.WriteLine("  -------------------------");
+
             for (int r = 0; r < 9; r++)
             {
                 char rowLabel = (char)('A' + r);
                 Console.Write($"{rowLabel} | ");
+
                 for (int c = 0; c < 9; c++)
                 {
+                    bool isHighlighted = highlightedCell.HasValue && highlightedCell.Value.row == r && highlightedCell.Value.col == c;
+                    bool isInvalid = invalidCells.Contains((r, c));
+
+                    if (isHighlighted)
+                    {
+                        Console.BackgroundColor = ConsoleColor.DarkGray;
+                    }
+
                     if (board[r, c] == 0)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write(". ");
-                    }
-                    else if (initialClues[r, c])
-                    {
-                        Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.Write($"{board[r, c]} ");
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write($"{board[r, c]} ");
+                        if (isInvalid)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                        }
+                        else if (initialClues[r, c])
+                        {
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                        }
+
+                        Console.Write(board[r, c]);
+                        Console.Write(' ');
                     }
 
                     Console.ResetColor();
 
-                    if ((c + 1) % 3 == 0) Console.Write("| ");
+                    if ((c + 1) % 3 == 0)
+                    {
+                        Console.Write("| ");
+                    }
                 }
+
                 Console.WriteLine();
-                if ((r + 1) % 3 == 0) Console.WriteLine("  -------------------------");
+                if ((r + 1) % 3 == 0)
+                {
+                    Console.WriteLine("  -------------------------");
+                }
             }
+        }
+
+        public void ClearHighlight()
+        {
+            highlightedCell = null;
         }
 
         public bool TryMakeMove(int row, int col, int num)
         {
-            if (initialClues[row, col]) return false;
+            if (row < 0 || row >= 9 || col < 0 || col >= 9)
+                return false;
 
-            if (IsValidPlacement(board, row, col, num))
-            {
-                board[row, col] = num;
-                return true;
-            }
-            return false;
+            if (initialClues[row, col])
+                return false;
+
+            if (num < 1 || num > 9)
+                return false;
+
+            board[row, col] = num;
+            highlightedCell = null;
+            lastHintedCell = null;
+            userEntries.RemoveAll(entry => entry.row == row && entry.col == col);
+            userEntries.Add((row, col, num));
+            return true;
         }
 
         public bool TryClear(int row, int col)
@@ -101,65 +166,245 @@ namespace Sudoku
             if (initialClues[row, col]) return false;
 
             board[row, col] = 0;
+            highlightedCell = null;
+            lastHintedCell = null;
+            userEntries.RemoveAll(entry => entry.row == row && entry.col == col);
             return true;
+        }
+
+        public bool HasRuleViolation()
+        {
+            return GetFirstViolationMessage() != null;
         }
 
         public string CheckBoard()
         {
-            bool complete = true;
-            for (int r = 0; r < 9; r++)
+            string? violation = GetFirstViolationMessage();
+            if (violation != null)
             {
-                for (int c = 0; c < 9; c++)
-                {
-                    if (board[r, c] == 0) complete = false;
-                }
+                return violation;
             }
-
-            if (complete)
-                return "Check: Congratulations! The board is completely filled and valid!";
-            else
-                return "Check: No rule violations found so far. Keep going!";
-        }
-
-        public string GiveHint()
-        {
-            int emptyRow = -1;
-            int emptyCol = -1;
 
             for (int r = 0; r < 9; r++)
             {
                 for (int c = 0; c < 9; c++)
                 {
                     if (board[r, c] == 0)
+                        return "No rule violations detected.";
+                }
+            }
+
+            return "You have successfully completed the Sudoku puzzle!";
+        }
+
+        private string? GetFirstViolationMessage()
+        {
+            for (int r = 0; r < 9; r++)
+            {
+                var seen = new HashSet<int>();
+                for (int c = 0; c < 9; c++)
+                {
+                    int value = board[r, c];
+                    if (value == 0) continue;
+                    if (!seen.Add(value))
+                        return $"Number {value} already exists in Row {GetRowLabel(r)}.";
+                }
+            }
+
+            for (int c = 0; c < 9; c++)
+            {
+                var seen = new HashSet<int>();
+                for (int r = 0; r < 9; r++)
+                {
+                    int value = board[r, c];
+                    if (value == 0) continue;
+                    if (!seen.Add(value))
+                        return $"Number {value} already exists in Column {c + 1}.";
+                }
+            }
+
+            for (int startRow = 0; startRow < 9; startRow += 3)
+            {
+                for (int startCol = 0; startCol < 9; startCol += 3)
+                {
+                    var seen = new HashSet<int>();
+                    for (int r = startRow; r < startRow + 3; r++)
                     {
-                        emptyRow = r;
-                        emptyCol = c;
-                        break;
+                        for (int c = startCol; c < startCol + 3; c++)
+                        {
+                            int value = board[r, c];
+                            if (value == 0) continue;
+                            if (!seen.Add(value))
+                                return $"Number {value} already exists in the same 3×3 subgrid.";
+                        }
                     }
                 }
+            }
 
-                if (emptyRow >= 0)
+            return null;
+        }
+
+        public HashSet<(int row, int col)> GetInvalidCells()
+        {
+            var invalid = new HashSet<(int row, int col)>();
+
+            for (int r = 0; r < 9; r++)
+            {
+                var seen = new Dictionary<int, List<(int row, int col)>>();
+                for (int c = 0; c < 9; c++)
                 {
-                    break;
+                    int value = board[r, c];
+                    if (value == 0) continue;
+                    if (!seen.ContainsKey(value))
+                        seen[value] = new List<(int row, int col)>();
+                    seen[value].Add((r, c));
+                }
+
+                foreach (var positions in seen.Values)
+                {
+                    if (positions.Count > 1)
+                    {
+                        foreach (var position in positions)
+                            invalid.Add(position);
+                    }
                 }
             }
 
-            if (emptyRow < 0 || emptyCol < 0)
+            for (int c = 0; c < 9; c++)
             {
-                return "Hint: No empty cells left to solve!";
+                var seen = new Dictionary<int, List<(int row, int col)>>();
+                for (int r = 0; r < 9; r++)
+                {
+                    int value = board[r, c];
+                    if (value == 0) continue;
+                    if (!seen.ContainsKey(value))
+                        seen[value] = new List<(int row, int col)>();
+                    seen[value].Add((r, c));
+                }
+
+                foreach (var positions in seen.Values)
+                {
+                    if (positions.Count > 1)
+                    {
+                        foreach (var position in positions)
+                            invalid.Add(position);
+                    }
+                }
             }
 
-            int[,] solvedCopy = (int[,])board.Clone();
-            if (!SolveSudoku(solvedCopy))
+            for (int startRow = 0; startRow < 9; startRow += 3)
             {
-                return "Hint: Unable to find a valid solution for the current board.";
+                for (int startCol = 0; startCol < 9; startCol += 3)
+                {
+                    var seen = new Dictionary<int, List<(int row, int col)>>();
+                    for (int r = startRow; r < startRow + 3; r++)
+                    {
+                        for (int c = startCol; c < startCol + 3; c++)
+                        {
+                            int value = board[r, c];
+                            if (value == 0) continue;
+                            if (!seen.ContainsKey(value))
+                                seen[value] = new List<(int row, int col)>();
+                            seen[value].Add((r, c));
+                        }
+                    }
+
+                    foreach (var positions in seen.Values)
+                    {
+                        if (positions.Count > 1)
+                        {
+                            foreach (var position in positions)
+                                invalid.Add(position);
+                        }
+                    }
+                }
             }
 
-            int value = solvedCopy[emptyRow, emptyCol];
-            board[emptyRow, emptyCol] = value;
+            return invalid;
+        }
 
-            char rowLabel = (char)('A' + emptyRow);
-            return $"Hint: Filled {rowLabel}{emptyCol + 1} with {value}";
+        public string GiveHint()
+        {
+            var wrongUserEntries = new List<(int row, int col)>();
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    if (board[r, c] != 0 && !initialClues[r, c] && board[r, c] != masterSolution[r, c])
+                    {
+                        wrongUserEntries.Add((r, c));
+                    }
+                }
+            }
+
+            var emptyCells = new List<(int row, int col)>();
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    if (board[r, c] == 0)
+                    {
+                        emptyCells.Add((r, c));
+                    }
+                }
+            }
+
+            var candidateWrongEntries = wrongUserEntries
+                .Where(cell => !lastHintedCell.HasValue || cell != lastHintedCell.Value)
+                .ToList();
+
+            if (candidateWrongEntries.Count > 0)
+            {
+                var target = candidateWrongEntries[rand.Next(candidateWrongEntries.Count)];
+                lastHintedCell = target;
+                highlightedCell = target;
+                int correctValue = masterSolution[target.row, target.col];
+                char rowLabel = (char)('A' + target.row);
+                return $"Hint: Cell {rowLabel}{target.col + 1} should be {correctValue}. The current value is incorrect.";
+            }
+
+            var candidateEmptyCells = emptyCells
+                .Where(cell => !lastHintedCell.HasValue || cell != lastHintedCell.Value)
+                .ToList();
+
+            if (candidateEmptyCells.Count > 0)
+            {
+                var target = candidateEmptyCells[rand.Next(candidateEmptyCells.Count)];
+                lastHintedCell = target;
+                highlightedCell = target;
+                int correctValue = masterSolution[target.row, target.col];
+                char rowLabel = (char)('A' + target.row);
+                return $"Hint: Cell {rowLabel}{target.col + 1} should be {correctValue}.";
+            }
+
+            if (wrongUserEntries.Count > 0)
+            {
+                var target = wrongUserEntries[rand.Next(wrongUserEntries.Count)];
+                lastHintedCell = target;
+                highlightedCell = target;
+                int correctValue = masterSolution[target.row, target.col];
+                char rowLabel = (char)('A' + target.row);
+                return $"Hint: Cell {rowLabel}{target.col + 1} should be {correctValue}. The current value is incorrect.";
+            }
+
+            if (emptyCells.Count > 0)
+            {
+                var target = emptyCells[rand.Next(emptyCells.Count)];
+                lastHintedCell = target;
+                highlightedCell = target;
+                int correctValue = masterSolution[target.row, target.col];
+                char rowLabel = (char)('A' + target.row);
+                return $"Hint: Cell {rowLabel}{target.col + 1} should be {correctValue}.";
+            }
+
+            highlightedCell = null;
+            lastHintedCell = null;
+            return "Hint: No empty or incorrect cells remain.";
+        }
+
+        private static string GetRowLabel(int row)
+        {
+            return ((char)('A' + row)).ToString();
         }
 
         private bool IsValidPlacement(int[,] grid, int row, int col, int num)
@@ -184,7 +429,7 @@ namespace Sudoku
             return true;
         }
 
-        private bool SolveSudoku(int[,] grid)
+        private bool GenerateSolvedBoard(int[,] grid)
         {
             for (int r = 0; r < 9; r++)
             {
@@ -200,7 +445,7 @@ namespace Sudoku
                             if (IsValidPlacement(grid, r, c, num))
                             {
                                 grid[r, c] = num;
-                                if (SolveSudoku(grid)) return true;
+                                if (GenerateSolvedBoard(grid)) return true;
                                 grid[r, c] = 0;
                             }
                         }
@@ -208,7 +453,59 @@ namespace Sudoku
                     }
                 }
             }
+
             return true;
+        }
+
+        private int CountSolutions(int[,] grid)
+        {
+            int count = 0;
+            CountSolutions(grid, ref count);
+            return count;
+        }
+
+        private void CountSolutions(int[,] grid, ref int count)
+        {
+            if (count > 1)
+                return;
+
+            int? row = null;
+            int? col = null;
+
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    if (grid[r, c] == 0)
+                    {
+                        row = r;
+                        col = c;
+                        break;
+                    }
+                }
+
+                if (row.HasValue)
+                    break;
+            }
+
+            if (!row.HasValue || !col.HasValue)
+            {
+                count++;
+                return;
+            }
+
+            for (int num = 1; num <= 9; num++)
+            {
+                if (IsValidPlacement(grid, row.Value, col.Value, num))
+                {
+                    grid[row.Value, col.Value] = num;
+                    CountSolutions(grid, ref count);
+                    grid[row.Value, col.Value] = 0;
+                }
+
+                if (count > 1)
+                    return;
+            }
         }
 
         private void Shuffle(int[] array)

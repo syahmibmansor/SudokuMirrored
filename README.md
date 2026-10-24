@@ -5,6 +5,7 @@ This solution contains a simple console-based Sudoku game built with C# and .NET
 ## Assumptions
 
 - The game starts with a valid Sudoku board that has been solved and then partially emptied.
+- A valid, well-formed Sudoku puzzle has exactly one unique solution.
 - The starting board contains pre-filled random numbers in random positions.
 - The player is expected to fill the remaining empty cells while preserving Sudoku rules.
 - The board uses a standard 9x9 layout with rows labeled A through I and columns numbered 1 through 9.
@@ -39,11 +40,13 @@ This solution contains a simple console-based Sudoku game built with C# and .NET
 
 ## Game behavior
 
-- A random valid Sudoku solution is generated before play begins.
+- A random valid Sudoku solution is generated before play begins and stored as the master board.
 - A fixed number of cells are removed from that solved board to create the puzzle.
+- After removing clues, the puzzle is validated to ensure it still has one and only one valid solution.
 - The program marks original clues distinctly from user-entered values.
 - User-entered cells cannot overwrite pre-filled clue values.
-- Invalid moves are rejected, and the game can provide a hint to fill the next empty cell.
+- Invalid moves are rejected, and the game can provide a hint to fill the next empty or incorrect cell.
+- Hint behavior: the game compares the current board to the master solution and logs the correct value for the selected cell without changing the board. If the user has entered a wrong value, the hint reveals the correct value for that cell instead of silently overwriting it.
 
 ## Environment
 
