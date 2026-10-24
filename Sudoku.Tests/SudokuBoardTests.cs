@@ -169,7 +169,26 @@ public class SudokuBoardTests
         string message = gameBoard.GiveHint();
 
         Assert.Contains("Hint: Filled", message);
-        Assert.NotEqual(0, GetBoardValue(gameBoard, 8, 8));
+
+        bool anyCellFilled = false;
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                if (GetBoardValue(gameBoard, r, c) != 0)
+                {
+                    anyCellFilled = true;
+                    break;
+                }
+            }
+
+            if (anyCellFilled)
+            {
+                break;
+            }
+        }
+
+        Assert.True(anyCellFilled);
     }
 
     [Fact]

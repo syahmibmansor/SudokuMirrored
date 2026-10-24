@@ -123,23 +123,43 @@ namespace Sudoku
 
         public string GiveHint()
         {
-            int[,] solvedCopy = (int[,])board.Clone();
-            if (SolveSudoku(solvedCopy))
+            int emptyRow = -1;
+            int emptyCol = -1;
+
+            for (int r = 0; r < 9; r++)
             {
-                for (int r = 0; r < 9; r++)
+                for (int c = 0; c < 9; c++)
                 {
-                    for (int c = 0; c < 9; c++)
+                    if (board[r, c] == 0)
                     {
-                        if (board[r, c] == 0)
-                        {
-                            board[r, c] = solvedCopy[r, c];
-                            char rowLabel = (char)('A' + r);
-                            return $"Hint: Filled {rowLabel}{c + 1} with {solvedCopy[r, c]}";
-                        }
+                        emptyRow = r;
+                        emptyCol = c;
+                        break;
                     }
                 }
+
+                if (emptyRow >= 0)
+                {
+                    break;
+                }
             }
-            return "Hint: No empty cells left to solve!";
+
+            if (emptyRow < 0 || emptyCol < 0)
+            {
+                return "Hint: No empty cells left to solve!";
+            }
+
+            int[,] solvedCopy = (int[,])board.Clone();
+            if (!SolveSudoku(solvedCopy))
+            {
+                return "Hint: Unable to find a valid solution for the current board.";
+            }
+
+            int value = solvedCopy[emptyRow, emptyCol];
+            board[emptyRow, emptyCol] = value;
+
+            char rowLabel = (char)('A' + emptyRow);
+            return $"Hint: Filled {rowLabel}{emptyCol + 1} with {value}";
         }
 
         private bool IsValidPlacement(int[,] grid, int row, int col, int num)
