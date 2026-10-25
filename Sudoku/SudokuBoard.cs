@@ -510,14 +510,14 @@ namespace Sudoku
             return true;
         }
 
-        private int CountSolutions(int[,] grid)
+        private static int CountSolutions(int[,] grid)
         {
             int count = 0;
             CountSolutions(grid, ref count);
             return count;
         }
 
-        private void CountSolutions(int[,] grid, ref int count)
+        private static void CountSolutions(int[,] grid, ref int count)
         {
             if (count > 1)
                 return;

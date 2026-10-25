@@ -22,11 +22,14 @@ This document outlines the phased delivery plan for the C# Sudoku console applic
 ### PROD-01: Production-ready with appropriate documentation
 * **Category:** `DevOps` / `Engineering Standards`
 * **Status:** Priority 1
-* **Description:** Establish production readiness through comprehensive documentation, consistent C# project properties, and a CI/CD pipeline template simulating staging and production deployments.
+* **Description:** Establish production readiness through comprehensive documentation, consistent C# project properties, and a CI/CD pipeline template simulating staging and production deployments. This includes static quality gates, build/test validation, and remediation of any issues raised by automated analysis.
 * **Acceptance Criteria:**
   * Comprehensive `README.md` with environment prerequisites, build instructions, design assumptions, and execution guidelines[cite: 2, 3].
   * Base configuration files (e.g., `Directory.Build.props`) for uniform C# compiler settings[cite: 3].
   * Foundational CI/CD YAML configuration (`azure-pipelines.yml` or GitHub Actions) demonstrating automated build, test, and release flows for staging and production targets[cite: 3].
+  * Azure Pipelines includes SonarQube/SonarCloud analysis as part of the build pipeline to enforce code quality checks before release.
+  * Automated review issues raised by static analysis are fixed before the build is considered ready for merge or release.
+  * The project builds and tests successfully in CI with no failing unit tests and no critical quality gate regressions.
 
 ---
 
