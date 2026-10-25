@@ -16,7 +16,7 @@ variables:
 
 stages:
   - stage: Build
-    displayName: 'Build and test'
+    displayName: 'Build and test with SonarQube Cloud'
     jobs:
       - job: BuildJob
         pool:
@@ -27,6 +27,16 @@ stages:
             inputs:
               packageType: 'sdk'
               version: '$(dotNetVersion)'
+
+          # 1. SONARCLOUD PREPARE: Uses @3 for SonarCloud SaaS
+          - task: SonarCloudPrepare@3
+            displayName: 'Prepare SonarCloud analysis'
+            inputs:
+              SonarCloud: 'MySonarQubeConnection'
+              organization: 'syahmibmansor'
+              scannerMode: 'dotnet'
+              projectKey: 'syahmibmansor_Sudoku'
+              projectName: 'Sudoku'
 
           - script: dotnet restore Sudoku.slnx
             displayName: 'Restore dependencies'
@@ -44,6 +54,14 @@ stages:
               testResultsFormat: 'VSTest'
               testResultsFiles: '**/*.trx'
               failTaskOnFailedTests: true
+
+          # 2. SONARCLOUD ANALYZE: Runs the static code analysis
+          - task: SonarCloudAnalyze@3
+            displayName: 'Run SonarCloud code analysis'
+
+          # 3. SONARCLOUD PUBLISH: Publishes quality gate result
+          - task: SonarCloudPublish@3
+            displayName: 'Publish SonarCloud Quality Gate result'
 
   - stage: Staging
     displayName: 'Staging publish'
