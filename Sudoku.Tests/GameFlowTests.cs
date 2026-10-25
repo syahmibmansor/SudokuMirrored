@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Reflection;
 using Sudoku;
 using Xunit;
@@ -84,5 +86,87 @@ public class GameFlowTests
 
         Assert.True(gameBoard.IsBoardComplete());
         Assert.Equal("You have successfully completed the Sudoku puzzle!", gameBoard.CheckBoard());
+    }
+
+    [Fact]
+    public void Print_RendersBoardHeaderAndContents()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+
+        board[0, 0] = 5;
+        board[0, 1] = 3;
+        board[0, 2] = 4;
+        board[8, 8] = 9;
+        clues[0, 0] = true;
+        clues[0, 1] = true;
+        clues[0, 2] = true;
+        clues[8, 8] = true;
+
+        var gameBoard = CreateBoardWithState(board, clues);
+        var originalOut = Console.Out;
+
+        using var writer = new StringWriter();
+        try
+        {
+            Console.SetOut(writer);
+            gameBoard.Print();
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+
+        var output = writer.ToString();
+        Assert.Contains("1 2 3", output);
+        Assert.Contains("A |", output);
+        Assert.Contains("5", output);
+        Assert.Contains("9", output);
+    }
+
+    [Fact]
+    public void ClearHighlight_RemovesCurrentHighlightedCell()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        var gameBoard = CreateBoardWithState(board, clues);
+        var highlightedField = typeof(SudokuBoard).GetField("highlightedCell", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        Assert.NotNull(highlightedField);
+        highlightedField.SetValue(gameBoard, (0, 0));
+
+        gameBoard.ClearHighlight();
+
+        Assert.Null(highlightedField.GetValue(gameBoard));
+    }
+
+    [Fact]
+    public void RunGame_ExitsCleanly_WhenExitCommandIsEntered()
+    {
+        var originalIn = Console.In;
+        var originalOut = Console.Out;
+        var input = new StringReader("exit" + Environment.NewLine);
+        var output = new StringWriter();
+        var programType = typeof(SudokuBoard).Assembly.GetType("Sudoku.Program", throwOnError: true);
+        var runGameMethod = programType!.GetMethod("RunGame", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+        Assert.NotNull(programType);
+        Assert.NotNull(runGameMethod);
+
+        try
+        {
+            Console.SetIn(input);
+            Console.SetOut(output);
+
+            var exception = Record.Exception(() => runGameMethod.Invoke(null, new object[] { input, output }));
+
+            Assert.Null(exception);
+            Assert.Contains("History Log", output.ToString());
+        }
+        finally
+        {
+            Console.SetIn(originalIn);
+            Console.SetOut(originalOut);
+        }
     }
 }

@@ -4,8 +4,11 @@ namespace Sudoku;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    internal static void RunGame(TextReader? inputReader = null, TextWriter? outputWriter = null)
     {
+        TextReader input = inputReader ?? Console.In;
+        TextWriter output = outputWriter ?? Console.Out;
+
         SudokuBoard gameBoard = new SudokuBoard();
 
         List<string> historyLog = ["Game loaded with 30 random clues. Good luck!"];
@@ -16,13 +19,13 @@ internal class Program
         {
             if (gameCompleted)
             {
-                if (!Console.IsOutputRedirected)
+                if (outputWriter == null && !Console.IsOutputRedirected)
                 {
                     Console.Clear();
                 }
 
-                Console.WriteLine("You have successfully completed the Sudoku puzzle!");
-                Console.WriteLine("Press any key to play again, or Q to quit...");
+                output.WriteLine("You have successfully completed the Sudoku puzzle!");
+                output.WriteLine("Press any key to play again, or Q to quit...");
                 ConsoleKeyInfo key = Console.ReadKey(true);
                 if (char.ToLowerInvariant(key.KeyChar) == 'q')
                 {
@@ -36,36 +39,36 @@ internal class Program
                 continue;
             }
 
-            if (!Console.IsOutputRedirected)
+            if (outputWriter == null && !Console.IsOutputRedirected)
             {
                 Console.Clear();
             }
 
-            Console.WriteLine("================= History Log  ================");
+            output.WriteLine("================= History Log  ================");
             foreach (string log in historyLog)
             {
-                Console.WriteLine($"  > {log}");
+                output.WriteLine($"  > {log}");
             }
 
-            Console.WriteLine("=================== Board =====================");
+            output.WriteLine("=================== Board =====================");
             gameBoard.Print();
 
-            Console.WriteLine("================ Current move =================");
-            Console.WriteLine($">>{activeMessage}");
+            output.WriteLine("================ Current move =================");
+            output.WriteLine($">>{activeMessage}");
 
-            Console.WriteLine("================== Commands ===================");
-            Console.WriteLine("Insert: [Cell] [Number]  (e.g., A3 4)");
-            Console.WriteLine("Clear:  [Cell] clear     (e.g., C5 clear)");
-            Console.WriteLine("Hint:   hint");
-            Console.WriteLine("Check:  check");
-            Console.WriteLine("Quit:   exit");
-            Console.WriteLine("===============================================");
-            Console.Write("Enter command: ");
+            output.WriteLine("================== Commands ===================");
+            output.WriteLine("Insert: [Cell] [Number]  (e.g., A3 4)");
+            output.WriteLine("Clear:  [Cell] clear     (e.g., C5 clear)");
+            output.WriteLine("Hint:   hint");
+            output.WriteLine("Check:  check");
+            output.WriteLine("Quit:   exit");
+            output.WriteLine("===============================================");
+            output.Write("Enter command: ");
 
-            string? input = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(input)) continue;
+            string? userInput = input.ReadLine();
+            if (string.IsNullOrWhiteSpace(userInput)) continue;
 
-            ParsedCommand command = CommandParser.Parse(input);
+            ParsedCommand command = CommandParser.Parse(userInput);
             if (command.Kind == CommandKind.Exit) break;
 
             if (command.Kind == CommandKind.Hint)
@@ -144,5 +147,10 @@ internal class Program
             historyLog.Add(command.ErrorMessage);
             activeMessage = command.ErrorMessage;
         }
+    }
+
+    private static void Main(string[] args)
+    {
+        RunGame();
     }
 }
