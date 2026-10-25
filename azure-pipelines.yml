@@ -28,8 +28,8 @@ stages:
               packageType: 'sdk'
               version: '$(dotNetVersion)'
 
-          # 1. SONARCLOUD PREPARE: Uses @3 for SonarCloud SaaS
-          - task: SonarCloudPrepare@3
+          # 1. SONARCLOUD PREPARE: Uses a fully qualified task version for SonarCloud SaaS
+          - task: SonarCloudPrepare@3.0
             displayName: 'Prepare SonarCloud analysis'
             inputs:
               SonarCloud: 'MySonarQubeConnection'
@@ -56,11 +56,11 @@ stages:
               failTaskOnFailedTests: true
 
           # 2. SONARCLOUD ANALYZE: Runs the static code analysis
-          - task: SonarCloudAnalyze@3
+          - task: SonarCloudAnalyze@3.0
             displayName: 'Run SonarCloud code analysis'
 
           # 3. SONARCLOUD PUBLISH: Publishes quality gate result
-          - task: SonarCloudPublish@3
+          - task: SonarCloudPublish@3.0
             displayName: 'Publish SonarCloud Quality Gate result'
 
   - stage: Staging

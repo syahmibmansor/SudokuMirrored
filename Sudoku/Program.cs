@@ -1,13 +1,14 @@
-﻿using Sudoku;
-using System;
+﻿using System;
 
-class Program
+namespace Sudoku;
+
+internal class Program
 {
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         SudokuBoard gameBoard = new SudokuBoard();
 
-        List<string> historyLog = new List<string> { "Game loaded with 30 random clues. Good luck!" };
+        List<string> historyLog = ["Game loaded with 30 random clues. Good luck!"];
         string activeMessage = historyLog[0];
         bool gameCompleted = false;
 
@@ -29,7 +30,7 @@ class Program
                 }
 
                 gameBoard = new SudokuBoard();
-                historyLog = new List<string> { "Game loaded with 30 random clues. Good luck!" };
+                historyLog = ["Game loaded with 30 random clues. Good luck!"];
                 activeMessage = historyLog[0];
                 gameCompleted = false;
                 continue;

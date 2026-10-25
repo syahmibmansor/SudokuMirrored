@@ -16,8 +16,8 @@ namespace Sudoku
         private int[,] masterSolution = new int[9, 9];
         private (int row, int col)? highlightedCell;
         private (int row, int col)? lastHintedCell;
-        private readonly HashSet<(int row, int col)> hintedCells = new HashSet<(int row, int col)>();
-        private readonly List<(int row, int col, int value)> userEntries = new List<(int row, int col, int value)>();
+        private readonly HashSet<(int row, int col)> hintedCells = [];
+        private readonly List<(int row, int col, int value)> userEntries = [];
 
         /// <summary>
         /// Initializes a new random Sudoku board with a valid puzzle state.
@@ -316,7 +316,7 @@ namespace Sudoku
                     int value = board[r, c];
                     if (value == 0) continue;
                     if (!seen.ContainsKey(value))
-                        seen[value] = new List<(int row, int col)>();
+                        seen[value] = [];
                     seen[value].Add((r, c));
                 }
 
@@ -338,7 +338,7 @@ namespace Sudoku
                     int value = board[r, c];
                     if (value == 0) continue;
                     if (!seen.ContainsKey(value))
-                        seen[value] = new List<(int row, int col)>();
+                        seen[value] = [];
                     seen[value].Add((r, c));
                 }
 
@@ -364,7 +364,7 @@ namespace Sudoku
                             int value = board[r, c];
                             if (value == 0) continue;
                             if (!seen.ContainsKey(value))
-                                seen[value] = new List<(int row, int col)>();
+                                seen[value] = [];
                             seen[value].Add((r, c));
                         }
                     }
@@ -460,7 +460,7 @@ namespace Sudoku
             return ((char)('A' + row)).ToString();
         }
 
-        private bool IsValidPlacement(int[,] grid, int row, int col, int num)
+        private static bool IsValidPlacement(int[,] grid, int row, int col, int num)
         {
             for (int i = 0; i < 9; i++)
             {

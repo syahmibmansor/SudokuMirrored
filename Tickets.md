@@ -49,6 +49,10 @@ This document outlines the phased delivery plan for the C# Sudoku console applic
 * **Category:** `Enhancement` (Post-MVP)
 * **Description:** Upgrade the CLI from pure text-command entry to an interactive grid view where users can navigate cells using arrow keys[cite: 3].
 
+### UI-02: Audio Feedback for Board Events
+* **Category:** `Enhancement` (Post-MVP)
+* **Description:** Add lightweight audio feedback for key game events such as successful placement, invalid move rejection, and puzzle completion.
+
 ### PERS-01: Native Save, Load, & Statistics (`System.Text.Json`)
 * **Category:** `Feature` (Post-MVP)
 * **Description:** Enable users to persist their active game session to disk and track game history using `System.Text.Json`[cite: 3].
