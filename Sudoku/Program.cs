@@ -4,12 +4,18 @@ namespace Sudoku;
 
 internal class Program
 {
-    internal static void RunGame(TextReader? inputReader = null, TextWriter? outputWriter = null)
+    internal static void RunGame(
+        TextReader? inputReader = null,
+        TextWriter? outputWriter = null,
+        Func<SudokuBoard>? boardFactory = null,
+        Func<ConsoleKeyInfo>? keyReader = null)
     {
         TextReader input = inputReader ?? Console.In;
         TextWriter output = outputWriter ?? Console.Out;
+        Func<SudokuBoard> gameBoardFactory = boardFactory ?? (() => new SudokuBoard());
+        Func<ConsoleKeyInfo> readKey = keyReader ?? (() => Console.ReadKey(true));
 
-        SudokuBoard gameBoard = new SudokuBoard();
+        SudokuBoard gameBoard = gameBoardFactory();
 
         List<string> historyLog = ["Game loaded with 30 random clues. Good luck!"];
         string activeMessage = historyLog[0];
@@ -26,13 +32,13 @@ internal class Program
 
                 output.WriteLine("You have successfully completed the Sudoku puzzle!");
                 output.WriteLine("Press any key to play again, or Q to quit...");
-                ConsoleKeyInfo key = Console.ReadKey(true);
+                ConsoleKeyInfo key = readKey();
                 if (char.ToLowerInvariant(key.KeyChar) == 'q')
                 {
                     break;
                 }
 
-                gameBoard = new SudokuBoard();
+                gameBoard = gameBoardFactory();
                 historyLog = ["Game loaded with 30 random clues. Good luck!"];
                 activeMessage = historyLog[0];
                 gameCompleted = false;

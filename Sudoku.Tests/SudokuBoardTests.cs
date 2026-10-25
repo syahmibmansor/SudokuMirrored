@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using Xunit;
 
@@ -378,6 +381,119 @@ public class SudokuBoardTests
         var result = gameBoard.CheckBoard();
 
         Assert.Equal("Number 1 already exists in the same 3×3 subgrid.", result);
+    }
+
+    [Fact]
+    public void TryMakeMove_RejectsOutOfRangeValueAndReplacesUserEntry()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        Assert.False(gameBoard.TryMakeMove(0, 0, 0));
+        Assert.True(gameBoard.TryMakeMove(0, 0, 4));
+        Assert.True(gameBoard.TryMakeMove(0, 0, 7));
+        Assert.Equal(7, GetBoardValue(gameBoard, 0, 0));
+    }
+
+    [Fact]
+    public void IsBoardComplete_ReturnsFalse_WhenAnyCellIsEmpty()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        board[0, 0] = 5;
+        board[0, 1] = 3;
+        board[0, 2] = 4;
+        clues[0, 0] = true;
+        clues[0, 1] = true;
+        clues[0, 2] = true;
+
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        Assert.False(gameBoard.IsBoardComplete());
+    }
+
+    [Fact]
+    public void GetInvalidCells_TracksDuplicatesAcrossRowColumnAndSubgrid()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+
+        board[0, 0] = 1;
+        board[0, 1] = 1;
+        board[1, 0] = 1;
+        board[2, 2] = 1;
+        board[2, 3] = 1;
+
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        var invalid = gameBoard.GetInvalidCells();
+
+        Assert.Contains((0, 0), invalid);
+        Assert.Contains((0, 1), invalid);
+        Assert.Contains((1, 0), invalid);
+        Assert.Contains((2, 2), invalid);
+        Assert.Contains((2, 3), invalid);
+    }
+
+    [Fact]
+    public void GiveHint_ReturnsNoRemainingHints_WhenBoardIsFullyCorrect()
+    {
+        var solvedBoard = new int[9, 9]
+        {
+            {5, 3, 4, 6, 7, 8, 9, 1, 2},
+            {6, 7, 2, 1, 9, 5, 3, 4, 8},
+            {1, 9, 8, 3, 4, 2, 5, 6, 7},
+            {8, 5, 9, 7, 6, 1, 4, 2, 3},
+            {4, 2, 6, 8, 5, 3, 7, 9, 1},
+            {7, 1, 3, 9, 2, 4, 8, 5, 6},
+            {9, 6, 1, 5, 3, 7, 2, 8, 4},
+            {2, 8, 7, 4, 1, 9, 6, 3, 5},
+            {3, 4, 5, 2, 8, 6, 1, 7, 9}
+        };
+
+        var gameBoard = CreateBoardWithState(solvedBoard, new bool[9, 9]);
+        var masterSolutionField = typeof(SudokuBoard).GetField("masterSolution", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(masterSolutionField);
+        masterSolutionField.SetValue(gameBoard, solvedBoard);
+
+        var result = gameBoard.GiveHint();
+
+        Assert.Equal("Hint: No empty or incorrect cells remain.", result);
+    }
+
+    [Fact]
+    public void Print_RendersBoardWithHighlightedAndInvalidCellBranches()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        board[0, 0] = 1;
+        board[0, 1] = 1;
+        board[0, 2] = 3;
+        clues[0, 0] = false;
+        clues[0, 1] = false;
+        clues[0, 2] = false;
+
+        var gameBoard = CreateBoardWithState(board, clues);
+        var highlightedField = typeof(SudokuBoard).GetField("highlightedCell", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(highlightedField);
+        highlightedField.SetValue(gameBoard, (0, 2));
+
+        var originalOut = Console.Out;
+        using var writer = new StringWriter();
+
+        try
+        {
+            Console.SetOut(writer);
+            gameBoard.Print();
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+
+        Assert.Contains("A |", writer.ToString());
+        Assert.Contains("1", writer.ToString());
     }
 
     [Fact]
