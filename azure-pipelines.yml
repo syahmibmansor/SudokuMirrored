@@ -38,7 +38,7 @@ stages:
               projectKey: 'syahmibmansor_Sudoku'
               projectName: 'Sudoku'
               extraProperties: |
-                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/*/coverage.opencover.xml
+                sonar.cs.cobertura.reportsPaths=$(Agent.TempDirectory)/**/*.cobertura.xml
 
           - script: dotnet restore Sudoku.slnx
             displayName: 'Restore dependencies'
