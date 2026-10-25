@@ -49,9 +49,9 @@ stages:
           - task: DotNetCoreCLI@2
             displayName: 'Run unit tests'
             inputs:
-              command: 'test'
-              projects: '**/*.Tests.csproj'
-              arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage"'
+                command: 'test'
+                projects: '**/*.Tests.csproj'
+                arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage" --logger trx --results-directory $(Agent.TempDirectory)/TestResults'
 
           - task: PublishTestResults@2
             displayName: 'Publish test results'
