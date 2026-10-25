@@ -18,6 +18,11 @@ These tests cover the core Sudoku board model and puzzle generation behavior.
 - Preserves clue values and prevents overwriting them
 - Verifies the initial puzzle contains exactly 30 clues
 - Confirms the generated board is valid and has no rule violations at startup
+- Rejects out-of-range values outside 1-9 and preserves the latest valid user entry
+- Returns false for an incomplete board when any cell remains empty
+- Identifies invalid cells across duplicate row, column, and subgrid boundaries
+- Returns the final no-more-hints message when the board is already fully correct
+- Renders board output correctly for highlighted and invalid cell states
 
 ## 2. Command Prompt and Input Parsing
 
@@ -37,6 +42,8 @@ These tests cover command parsing and console input safety.
 - Handles extra whitespace and padded input
 - Rejects empty input without crashing
 - Gracefully accepts exit commands
+- Normalizes padded and lowercase command variants for resilient CLI input parsing
+- Safely ignores blank lines or enter-only input without breaking the game loop
 
 ### Input Validation Scenarios
 - Valid Coordinate Parsing: `A3 4` -> Row 0, Column 2, Value 4
@@ -105,6 +112,12 @@ These tests cover the overall gameplay loop and end-state behavior.
 - Restart / replay flow is handled after winning
 - A user can overwrite a value they previously entered themselves
 - Clearing a user-filled cell works; clearing an initial clue cell remains blocked
+- `Print()` renders the board consistently and includes expected headings and values
+- `ClearHighlight()` clears the active hint highlight without throwing exceptions
+- Game loop exits cleanly on `exit` without unhandled errors
+- Completion flow handles win state and quit-after-victory behavior
+- Command-processing branches cover `hint`, `check`, `clear`, `move`, invalid input, and exit logic in one end-to-end game loop scenario
+- Main entrypoint execution path is tested for graceful startup and exit handling
 
 ### Completion Flow Expectations
 - `You have successfully completed the Sudoku puzzle!`
@@ -123,6 +136,10 @@ The suite is designed to catch both logic regressions and user experience issues
 - startup board integrity and exact clue count validation
 - whitespace and CLI resilience
 - safe handling of empty input and exit commands
+- rendering and highlight behavior in console output
+- no-hint final state when the board is already solved
+- command branching coverage for interactive game flow
+- graceful startup/shutdown path for the console entrypoint
 
 ## Running the Tests
 

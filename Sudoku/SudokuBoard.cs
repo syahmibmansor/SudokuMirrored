@@ -110,7 +110,7 @@ namespace Sudoku
 
                     if (board[r, c] == 0)
                     {
-                        Console.Write(". ");
+                        Console.Write("_ ");
                     }
                     else
                     {
