@@ -61,6 +61,13 @@ stages:
               testResultsFiles: '**/*.trx'
               failTaskOnFailedTests: true
 
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Code Coverage Artifact'
+            inputs:
+              targetPath: '$(Agent.TempDirectory)'
+              artifact: 'CodeCoverageReport'
+              publishLocation: 'pipeline'
+
           # 2. SONARCLOUD ANALYZE: Runs the static code analysis
           - task: SonarCloudAnalyze@4.2.6
             displayName: 'Run SonarCloud code analysis'
