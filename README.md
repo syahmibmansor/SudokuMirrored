@@ -61,6 +61,16 @@ This project runs in a .NET console environment and is intended for local execut
 - Command-line environments with the .NET SDK installed
 - Other supported .NET 10 operating systems when the SDK is available
 
-## Notes
+## Testing
 
-The project is intentionally lightweight and self-contained, making it a good example of a console-based game implementation in C#.
+This solution uses xUnit for automated validation and regression coverage. The test project is located in `Sudoku.Tests` and validates both the core board logic and the user command flow.
+
+For the categorized testing breakdown, see `TESTING.md`.
+
+### Test execution
+
+Run the suite from the repository root:
+
+```bash
+dotnet test
+```

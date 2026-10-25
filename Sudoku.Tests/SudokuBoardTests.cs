@@ -139,6 +139,44 @@ public class SudokuBoardTests
     }
 
     [Fact]
+    public void InitialPuzzle_ContainsExactlyThirtyClues()
+    {
+        var gameBoard = new SudokuBoard();
+        var boardField = typeof(SudokuBoard).GetField("board", BindingFlags.NonPublic | BindingFlags.Instance);
+        var cluesField = typeof(SudokuBoard).GetField("initialClues", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        Assert.NotNull(boardField);
+        Assert.NotNull(cluesField);
+
+        var currentBoard = Assert.IsType<int[,]>(boardField.GetValue(gameBoard));
+        var clues = Assert.IsType<bool[,]>(cluesField.GetValue(gameBoard));
+
+        int clueCount = 0;
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                if (currentBoard[r, c] != 0)
+                {
+                    clueCount++;
+                    Assert.True(clues[r, c]);
+                }
+            }
+        }
+
+        Assert.Equal(30, clueCount);
+    }
+
+    [Fact]
+    public void InitialPuzzle_HasNoStartingRuleViolations()
+    {
+        var gameBoard = new SudokuBoard();
+
+        Assert.False(gameBoard.HasRuleViolation());
+        Assert.Equal("No rule violations detected.", gameBoard.CheckBoard());
+    }
+
+    [Fact]
     public void GiveHint_ReportsCorrectValueWithoutChangingBoard()
     {
         int[,] board = new int[9, 9];

@@ -74,4 +74,32 @@ public class CommandParserTests
         Assert.Equal(CommandKind.Invalid, garbage.Kind);
         Assert.Equal("Error: Invalid format. Use 'A3 4' or 'C5 clear'.", missingValue.ErrorMessage);
     }
+
+    [Fact]
+    public void Parse_HandlesWhitespaceAndPadding()
+    {
+        var command = CommandParser.Parse("   A3    4   ");
+
+        Assert.Equal(CommandKind.Move, command.Kind);
+        Assert.Equal(0, command.Row);
+        Assert.Equal(2, command.Column);
+        Assert.Equal(4, command.Value);
+    }
+
+    [Fact]
+    public void Parse_RejectsEmptyInputWithoutThrowing()
+    {
+        var command = CommandParser.Parse("   ");
+
+        Assert.Equal(CommandKind.Invalid, command.Kind);
+        Assert.Equal("Error: Invalid format. Use 'A3 4' or 'C5 clear'.", command.ErrorMessage);
+    }
+
+    [Fact]
+    public void Parse_HandlesExitCommand()
+    {
+        var command = CommandParser.Parse("exit");
+
+        Assert.Equal(CommandKind.Exit, command.Kind);
+    }
 }

@@ -52,6 +52,18 @@ public class GameFlowTests
     }
 
     [Fact]
+    public void TryMakeMove_AllowsUserToOverwriteTheirOwnValue()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        Assert.True(gameBoard.TryMakeMove(0, 0, 4));
+        Assert.True(gameBoard.TryMakeMove(0, 0, 7));
+        Assert.Equal(7, board[0, 0]);
+    }
+
+    [Fact]
     public void BoardCompletion_IsDetectedWhenSolved()
     {
         int[,] solvedBoard =

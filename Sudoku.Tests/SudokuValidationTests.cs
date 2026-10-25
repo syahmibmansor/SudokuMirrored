@@ -104,4 +104,22 @@ public class SudokuValidationTests
 
         Assert.Equal("No rule violations detected.", result);
     }
+
+    [Fact]
+    public void CheckBoard_ReturnsSubgridViolationMessage_ForBoundaryCells()
+    {
+        var board = new int[9, 9];
+        var clues = new bool[9, 9];
+
+        board[0, 2] = 1;
+        board[1, 0] = 2;
+        board[1, 1] = 3;
+        board[2, 0] = 1;
+
+        var gameBoard = CreateBoardWithState(board, clues);
+
+        var result = gameBoard.CheckBoard();
+
+        Assert.Equal("Number 1 already exists in the same 3×3 subgrid.", result);
+    }
 }

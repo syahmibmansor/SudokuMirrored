@@ -118,4 +118,71 @@ public class HintCoachTests
         Assert.Contains("Hint: Cell", hint);
         Assert.DoesNotContain("No empty or incorrect cells remain.", hint);
     }
+
+    [Fact]
+    public void GiveHint_PrioritizesIncorrectUserEntryBeforeEmptyCell()
+    {
+        var solvedBoard = CreateSolvedBoard();
+        var board = (int[,])solvedBoard.Clone();
+        var clues = new bool[9, 9];
+
+        board[0, 0] = 8;
+        board[0, 1] = 0;
+        clues[0, 0] = false;
+        clues[0, 1] = false;
+
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                if (r == 0 && c < 2)
+                {
+                    continue;
+                }
+
+                if (board[r, c] != 0)
+                {
+                    clues[r, c] = true;
+                }
+            }
+        }
+
+        var gameBoard = CreateBoardWithState(board, clues);
+        var masterSolutionField = typeof(SudokuBoard).GetField("masterSolution", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(masterSolutionField);
+        masterSolutionField.SetValue(gameBoard, solvedBoard);
+
+        var hint = gameBoard.GiveHint();
+
+        Assert.Contains("A1", hint);
+        Assert.Contains("The current value is incorrect.", hint);
+    }
+
+    [Fact]
+    public void GiveHint_OnNearlyFullBoard_TargetsFinalRemainingCell()
+    {
+        var solvedBoard = CreateSolvedBoard();
+        var board = (int[,])solvedBoard.Clone();
+        var clues = new bool[9, 9];
+
+        board[8, 8] = 0;
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                clues[r, c] = board[r, c] != 0;
+            }
+        }
+        clues[8, 8] = false;
+
+        var gameBoard = CreateBoardWithState(board, clues);
+        var masterSolutionField = typeof(SudokuBoard).GetField("masterSolution", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(masterSolutionField);
+        masterSolutionField.SetValue(gameBoard, solvedBoard);
+
+        var hint = gameBoard.GiveHint();
+
+        Assert.Contains("I9", hint);
+        Assert.Contains("should be", hint);
+    }
 }
