@@ -27,6 +27,9 @@ namespace Sudoku
             GenerateRandomPuzzle();
         }
 
+        /// <summary>
+        /// Generates a valid solved board and removes cells until the puzzle reaches the target clue count.
+        /// </summary>
         private void GenerateRandomPuzzle()
         {
             board = new int[9, 9];
@@ -482,6 +485,11 @@ namespace Sudoku
             return true;
         }
 
+        /// <summary>
+        /// Recursively fills the grid with a valid complete Sudoku solution.
+        /// </summary>
+        /// <param name="grid">The board to populate.</param>
+        /// <returns>True when a valid solution is found; otherwise, false.</returns>
         private bool GenerateSolvedBoard(int[,] grid)
         {
             for (int r = 0; r < 9; r++)
@@ -510,6 +518,11 @@ namespace Sudoku
             return true;
         }
 
+        /// <summary>
+        /// Counts how many valid Sudoku solutions can be formed from the current board state.
+        /// </summary>
+        /// <param name="grid">The board to analyze.</param>
+        /// <returns>The number of valid solutions.</returns>
         private static int CountSolutions(int[,] grid)
         {
             int count = 0;
@@ -517,6 +530,11 @@ namespace Sudoku
             return count;
         }
 
+        /// <summary>
+        /// Recursively explores the board to determine whether it has a unique solution.
+        /// </summary>
+        /// <param name="grid">The board being solved.</param>
+        /// <param name="count">Running solution count accumulator.</param>
         private static void CountSolutions(int[,] grid, ref int count)
         {
             if (count > 1)
@@ -561,6 +579,10 @@ namespace Sudoku
             }
         }
 
+        /// <summary>
+        /// Shuffles an array in place using Fisher-Yates ordering.
+        /// </summary>
+        /// <param name="array">The array to shuffle.</param>
         private void Shuffle(int[] array)
         {
             int n = array.Length;

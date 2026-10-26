@@ -4,6 +4,13 @@ namespace Sudoku;
 
 internal class Program
 {
+    /// <summary>
+    /// Runs the interactive Sudoku game loop using the supplied console or test-friendly streams.
+    /// </summary>
+    /// <param name="inputReader">Optional input source for tests; otherwise Console.In is used.</param>
+    /// <param name="outputWriter">Optional output writer for tests; otherwise Console.Out is used.</param>
+    /// <param name="boardFactory">Optional board factory hook for controlled test scenarios.</param>
+    /// <param name="keyReader">Optional key reader hook for replay or quit testing.</param>
     internal static void RunGame(
         TextReader? inputReader = null,
         TextWriter? outputWriter = null,
@@ -155,6 +162,10 @@ internal class Program
         }
     }
 
+    /// <summary>
+    /// Application entry point for the command-line Sudoku game.
+    /// </summary>
+    /// <param name="args">Command-line arguments, currently unused.</param>
     private static void Main(string[] args)
     {
         RunGame();
